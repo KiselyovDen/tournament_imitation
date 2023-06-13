@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Dto;
+namespace App\GameScores;
 
 use App\Entity\Team;
 
-class GameScoreDto
+class GameScoreElement
 {
     public function __construct(
         public readonly Team $team,

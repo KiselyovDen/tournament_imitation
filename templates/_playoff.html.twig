@@ -18,7 +18,7 @@
         </tbody>
     </table>
 {% endfor %}
-{% if type == 'QUARTER' or type == 'HALF' %}
+{% if type != 'FINAL' %}
     <a class="pure-button pure-button-primary" href="{{ path('generate-results', {'step': type|lower}) }}">Generate results</a>
 {% endif %}
 {% if type == 'FINAL' %}

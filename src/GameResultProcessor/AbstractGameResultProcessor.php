@@ -1,8 +1,8 @@
 <?php
 
-namespace App\GameResultProcessors;
+namespace App\GameResultProcessor;
 
-use App\Dto\GameScoreDto;
+use App\GameScores\GameScoreElement;
 use App\Repository\DivisionGameScoreRepository;
 use App\Repository\GameRepository;
 use App\Repository\TeamRepository;
@@ -18,14 +18,4 @@ abstract class AbstractGameResultProcessor
     }
 
     abstract public function process(): void;
-
-    /**
-     * @param GameScoreDto[] $scores
-     */
-    protected function sortScores(array &$scores): void
-    {
-        usort($scores, static function (GameScoreDto $a, GameScoreDto $b) {
-            return -($a->getScore() <=> $b->getScore());
-        });
-    }
 }

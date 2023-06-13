@@ -8,13 +8,12 @@ use App\Repository\TeamRepository;
 use Faker;
 use Symfony\Component\DependencyInjection\Attribute\AsAlias;
 
-#[AsAlias(id: 'app.division_table')]
+#[AsAlias(id: 'app.division_table_model')]
 final readonly class DivisionTableModel
 {
     public function __construct(
         private TeamRepository $teamRepository
-    )
-    {
+    ) {
     }
 
     public function createDivisions(int $teamsCount): void

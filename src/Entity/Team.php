@@ -4,7 +4,7 @@ namespace App\Entity;
 
 use App\Enum\Division;
 use App\Enum\GameType;
-use App\Registry\GameRegistry;
+use App\Registry\GamesRegistry;
 use App\Repository\TeamRepository;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -80,7 +80,7 @@ class Team
 
         $thisTeam = $this;
         $games = array_filter(
-            GameRegistry::getInstance()->getGamesByType(GameType::DIVISION),
+            GamesRegistry::getInstance()->getGamesByType(GameType::DIVISION),
             static function (Game $g) use ($team2, $thisTeam) {
                 return
                     ($g->getTeam1() === $thisTeam && $g->getTeam2() === $team2)

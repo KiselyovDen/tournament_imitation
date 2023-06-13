@@ -7,7 +7,7 @@ use App\Entity\DivisionGameScore;
 use App\Entity\Game;
 use App\Entity\Team;
 use App\Enum\GameType;
-use App\GameResultProcessors\GameResultProcessorCreator;
+use App\GameResultProcessor\GameResultProcessorFactory;
 use App\Model\DivisionTableModel;
 use App\Tests\Support\GamesTester;
 
@@ -40,11 +40,11 @@ class PlayOffCest
         ]);
 
         /**
-         * @var GameResultProcessorCreator $creator
+         * @var GameResultProcessorFactory $creator
          */
-        $creator = $I->grabService(GameResultProcessorCreator::class);
+        $creator = $I->grabService(GameResultProcessorFactory::class);
 
-        $processor =  $creator->createProcessor(GameType::HALF);
+        $processor = $creator->createProcessor(GameType::HALF);
         $processor->process();
     }
 

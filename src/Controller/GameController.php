@@ -3,9 +3,9 @@
 namespace App\Controller;
 
 use App\Enum\GameType;
-use App\GameResultProcessors\GameResultProcessorCreator;
+use App\GameResultProcessor\GameResultProcessorFactory;
 use App\Model\DivisionTableModel;
-use App\Registry\GameRegistry;
+use App\Registry\GamesRegistry;
 use App\Repository\GameRepository;
 use App\Repository\TeamRepository;
 use Exception;
@@ -24,7 +24,7 @@ class GameController extends AbstractController
         $teams = $teamRepository->findAll();
         $games = $gameRepository->findAll();
 
-        $gameRegistry = GameRegistry::getInstance();
+        $gameRegistry = GamesRegistry::getInstance();
         $gameRegistry->loadGames($games);
 
         return $this->render(
@@ -47,7 +47,7 @@ class GameController extends AbstractController
             new Range(['min' => 8, 'max' => 20]),
         ]);
 
-        if($violations->count() > 0) {
+        if ($violations->count() > 0) {
             $this->addFlash('error', $violations->get(0)->getMessage());
             $this->addFlash('tmp_teams_count', $teamsCount);
             return $this->redirectToRoute('index');
@@ -59,13 +59,10 @@ class GameController extends AbstractController
     }
 
     #[Route('/generate-results/{step}', name: 'generate-results')]
-    public function generateResults(string $step, GameResultProcessorCreator $gameProcessorCreator): Response
+    public function generateResults(string $step, GameResultProcessorFactory $gameProcessorCreator): Response
     {
         $type = GameType::tryFrom(strtoupper($step));
         if (!$type) {
-            return $this->redirectToRoute('index');
-        }
-        if (!in_array($type, [GameType::DIVISION, GameType::QUARTER, GameType::HALF], true)) {
             return $this->redirectToRoute('index');
         }
 
@@ -73,7 +70,6 @@ class GameController extends AbstractController
             $processor = $gameProcessorCreator->createProcessor($type);
             $processor->process();
         } catch (Exception) {
-
         } finally {
             return $this->redirectToRoute('index');
         }

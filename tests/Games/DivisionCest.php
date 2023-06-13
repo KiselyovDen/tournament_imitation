@@ -3,11 +3,11 @@
 
 namespace App\Tests\Games;
 
-use App\Dto\GameScoreDto;
+use App\GameScores\GameScoreElement;
 use App\Entity\DivisionGameScore;
 use App\Entity\Game;
 use App\Enum\GameType;
-use App\GameResultProcessors\GameResultProcessorCreator;
+use App\GameResultProcessor\GameResultProcessorFactory;
 use App\Model\DivisionTableModel;
 use App\Tests\Support\GamesTester;
 
@@ -22,9 +22,9 @@ class DivisionCest
         $divisionTableModel = $I->grabService(DivisionTableModel::class);
         $divisionTableModel->createDivisions(10);
         /**
-         * @var GameResultProcessorCreator $creator
+         * @var GameResultProcessorFactory $creator
          */
-        $creator = $I->grabService(GameResultProcessorCreator::class);
+        $creator = $I->grabService(GameResultProcessorFactory::class);
 
         $processor = $creator->createProcessor(GameType::DIVISION);
         $processor->process();
@@ -52,13 +52,13 @@ class DivisionCest
         foreach ($games as $game) {
             $team1Id = $game->getTeam1()->getId();
             if (!isset($totalScores[$team1Id])) {
-                $totalScores[$team1Id] = new GameScoreDto($game->getTeam1(), $game->getTeam1Score());
+                $totalScores[$team1Id] = new GameScoreElement($game->getTeam1(), $game->getTeam1Score());
             } else {
                 $totalScores[$team1Id]->addScore($game->getTeam1Score());
             }
             $team2Id = $game->getTeam2()->getId();
             if (!isset($totalScores[$team2Id])) {
-                $totalScores[$team2Id] = new GameScoreDto($game->getTeam2(), $game->getTeam2Score());
+                $totalScores[$team2Id] = new GameScoreElement($game->getTeam2(), $game->getTeam2Score());
             } else {
                 $totalScores[$team2Id]->addScore($game->getTeam2Score());
             }

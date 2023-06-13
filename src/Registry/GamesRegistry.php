@@ -2,11 +2,11 @@
 
 namespace App\Registry;
 
-use App\Dto\GameScoreDto;
+use App\GameScores\GameScoreElement;
 use App\Entity\Game;
 use App\Enum\GameType;
 
-final class GameRegistry
+final class GamesRegistry
 {
     protected static self|null $instance = null;
 
@@ -16,10 +16,10 @@ final class GameRegistry
     {
     }
 
-    public static function getInstance(): GameRegistry
+    public static function getInstance(): GamesRegistry
     {
         if (self::$instance === null) {
-            self::$instance = new GameRegistry;
+            self::$instance = new GamesRegistry;
         }
 
         return self::$instance;
@@ -71,15 +71,19 @@ final class GameRegistry
              * @var Game $finalGame
              */
             $finalGame = reset($this->games[GameType::FINAL->value]);
-            $winners[] = new GameScoreDto($finalGame->getWinner(), $finalGame->getWinnerScore());
-            $winners[] = new GameScoreDto($finalGame->getLoser(), $finalGame->getLoserScore());
+            if ($finalGame->getWinnerScore() > 0) {
+                $winners[] = $finalGame->getWinner()->getTitle();
+                $winners[] = $finalGame->getLoser()->getTitle();
+            }
         }
         if (isset($this->games[GameType::BRONZE->value])) {
             /**
              * @var Game $bronzeGame
              */
             $bronzeGame = reset($this->games[GameType::BRONZE->value]);
-            $winners[] = new GameScoreDto($bronzeGame->getWinner(), $bronzeGame->getWinnerScore());
+            if ($bronzeGame->getWinnerScore() > 0) {
+                $winners[] = $bronzeGame->getWinner()->getTitle();
+            }
         }
 
         return $winners;

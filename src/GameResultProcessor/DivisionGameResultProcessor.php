@@ -1,13 +1,13 @@
 <?php
 
-namespace App\GameResultProcessors;
+namespace App\GameResultProcessor;
 
-use App\Dto\GameScoreDto;
+use App\GameScores\GameScores;
 use App\Entity\DivisionGameScore;
 use App\Entity\Game;
 use App\Enum\Division;
 use App\Enum\GameType;
-use Symfony\Component\DependencyInjection\Attribute\AsAlias;
+use App\GameCreator\QuarterGameCreator;
 
 class DivisionGameResultProcessor extends AbstractGameResultProcessor
 {
@@ -18,51 +18,36 @@ class DivisionGameResultProcessor extends AbstractGameResultProcessor
         $totalScores = [];
         $divisions = Division::cases();
         foreach ($divisions as $division) {
+            $totalScores[$division->value] = new GameScores();
+
             $teams = $this->teamRepository->findBy(['division' => $division]);
-            // pre-populate total scores array
-            foreach ($teams as $team) {
-                $totalScores[$division->value][$team->getId()] = new GameScoreDto($team, 0);
-            }
 
             $teamsCount = count($teams);
             for ($i = 0; $i < $teamsCount; $i++) {
                 $team1 = $teams[$i];
                 for ($j = $i + 1; $j < $teamsCount; $j++) {
                     $team2 = $teams[$j];
-
                     $game = Game::createGameForTeams($team1, $team2, GameType::DIVISION);
                     $game->generateScores();
+
                     $this->gameRepository->save($game);
 
-                    $totalScores[$division->value][$team1->getId()]->addScore($game->getTeam1Score());
-                    $totalScores[$division->value][$team2->getId()]->addScore($game->getTeam2Score());
+                    $totalScores[$division->value][$team1] = $game->getTeam1Score();
+                    $totalScores[$division->value][$team2] = $game->getTeam2Score();
                 }
             }
+
+            $totalScores[$division->value]->sort();
         }
 
-        // sorting scores to help to generate next step
-        $this->sortScores($totalScores[Division::A->value]);
-        $this->sortScores($totalScores[Division::B->value]);
-
-        $this->createQuarterGames($totalScores);
-
-        // flush DB
         $this->gameRepository->flush();
 
         // save division scores to separate table
         $this->saveDivisionGameScores($totalScores);
-    }
 
-    private function createQuarterGames(array $divisionScores): void
-    {
-        // generating quarter step stub
-        for ($i = 0; $i < 4; $i++) {
-            $team1 = $divisionScores[Division::A->value][$i];
-            $team2 = $divisionScores[Division::B->value][3 - $i];
-
-            $game = Game::createGameForTeams($team1->team, $team2->team, GameType::QUARTER);
-            $this->gameRepository->save($game);
-        }
+        // creating quarter games
+        $quarterGameCreator = new QuarterGameCreator($this->gameRepository);
+        $quarterGameCreator->create($totalScores);
     }
 
     private function saveDivisionGameScores(array $divisionScores): void

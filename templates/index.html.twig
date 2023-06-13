@@ -5,7 +5,7 @@
         <fieldset>
             <div class="pure-control-group">
                 <label for="teams_count">Teams count</label>
-                <input type="text" id="teams_count" name="teams_count" placeholder="16" value="{{ app.flashes('tmp_teams_count')|join() }}" />
+                <input type="text" id="teams_count" name="teams_count" placeholder="16" value="{{ app.flashes('tmp_teams_count')|join() }}"/>
                 {% for error in app.flashes('error') %}
                     <span class="pure-form-message-inline pure-form-message-error">{{ error }}</span>
                 {% endfor %}
@@ -69,11 +69,11 @@
                     </tr>
                     </thead>
                     <tbody>
-                    {% for i, winner in winners %}
-                    <tr>
-                        <td>{{ i + 1 }}</td>
-                        <td>{{ winner.team.getTitle() }}</td>
-                    </tr>
+                    {% for i, title in winners %}
+                        <tr>
+                            <td>{{ i + 1 }}</td>
+                            <td>{{ title }}</td>
+                        </tr>
                     {% endfor %}
                     </tbody>
                 </table>
