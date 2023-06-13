@@ -1,0 +1,27 @@
+{% for game in games %}
+    <table class="pure-table w-90">
+        <thead>
+        <tr>
+            <th class="w-90">Team</th>
+            <th>Score</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>{{ game.getTeam1().getTitle() }}</td>
+            <td class="{{ game.getTeam1Score() > 0 and game.getTeam1Score() >= game.getTeam2Score() ? 'winner' : '' }}">{{ game.getTeam1Score() }}</td>
+        </tr>
+        <tr>
+            <td>{{ game.getTeam2().getTitle() }}</td>
+            <td class="{{ game.getTeam2Score() > 0 and game.getTeam2Score() >= game.getTeam1Score() ? 'winner' : '' }}">{{ game.getTeam2Score() }}</td>
+        </tr>
+        </tbody>
+    </table>
+{% endfor %}
+{% if type == 'QUARTER' or type == 'HALF' %}
+    <a class="pure-button pure-button-primary" href="{{ path('generate-results', {'step': type|lower}) }}">Generate results</a>
+{% endif %}
+{% if type == 'FINAL' %}
+    <h3>Bronze</h3>
+    {{ include('_playoff.html.twig', {type: 'BRONZE', games: playOff['BRONZE']}) }}
+{% endif %}

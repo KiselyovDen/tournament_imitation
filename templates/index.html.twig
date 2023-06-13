@@ -1,0 +1,83 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <form class="pure-form pure-form-aligned" method="post" action="{{ path('create-divisions-table') }}">
+        <fieldset>
+            <div class="pure-control-group">
+                <label for="teams_count">Teams count</label>
+                <input type="text" id="teams_count" name="teams_count" placeholder="16" value="{{ app.flashes('tmp_teams_count')|join() }}" />
+                {% for error in app.flashes('error') %}
+                    <span class="pure-form-message-inline pure-form-message-error">{{ error }}</span>
+                {% endfor %}
+                <button type="submit" class="pure-button pure-button-primary">Create divisions table</button>
+            </div>
+        </fieldset>
+    </form>
+    <div class="pure-g">
+        {% for division, teams in divisions %}
+            <div class="pure-u-1-2">
+                <h2>{{ division }}</h2>
+                <table class="pure-table pure-table-horizontal w-90">
+                    <tbody>
+                    <tr>
+                        <th></th>
+                        {% for team in teams %}
+                            <th>{{ team.title }}</th>
+                        {% endfor %}
+                        <th></th>
+                    </tr>
+                    {% for team in teams %}
+                        <tr>
+                            <th>{{ team.title }}</th>
+                            {% for team2 in teams %}
+                                <td>{{ team.getDivisionGameScoreByOpponent(team2) }}</td>
+                            {% endfor %}
+                            {% if team.getDivisionGameScore() %}
+                                <td class="{{ team.getDivisionGameScore().isBest() ? 'winner' : '' }}">{{ team.getDivisionGameScore().getScore() }}</td>
+                            {% else %}
+                                <td>-</td>
+                            {% endif %}
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endfor %}
+        {% if divisions|length > 0 %}
+            <a class="pure-button pure-button-primary" href="{{ path('generate-results', {'step': 'division'}) }}">Generate results</a>
+        {% endif %}
+    </div>
+    <div class="pure-g">
+        {% for type, games in playOff %}
+            {% if type != 'BRONZE' %}
+                <div class="pure-u-1-4">
+                    {% if games|length > 0 %}
+                        <h2>{{ type|capitalize }}</h2>
+                        {{ include('_playoff.html.twig', {type: type, games: games}) }}
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% endfor %}
+        <div class="pure-u-1-4">
+            {% if winners|length > 0 %}
+                <h2>Winners</h2>
+                <table class="pure-table">
+                    <thead>
+                    <tr>
+                        <th>Place</th>
+                        <th>Team</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for i, winner in winners %}
+                    <tr>
+                        <td>{{ i + 1 }}</td>
+                        <td>{{ winner.team.getTitle() }}</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
