@@ -2,7 +2,7 @@
 
 ## Installation
 ```
-composer update
+composer install
 cp .env.sample .env
 # edit the .env with your db info
 bin/console make:migration
