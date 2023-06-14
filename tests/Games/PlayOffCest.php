@@ -7,12 +7,15 @@ use App\Entity\Game;
 use App\Entity\Team;
 use App\Enum\GameType;
 use App\GameCreator\GameCreatorFactory;
-use App\GameResultProcessor\GameResultProcessorFactory;
+use App\GameResultProcessor\HalfGameResultProcessor;
+use App\GameScores\GameScores;
 use App\Model\DivisionTableModel;
 use App\Tests\Support\GamesTester;
+use Codeception\Stub;
 
 class PlayOffCest
 {
+    private GameScores $gameScores;
     public function _before(GamesTester $I)
     {
         /**
@@ -23,34 +26,20 @@ class PlayOffCest
 
         $teams = $I->grabEntitiesFromRepository(Team::class);
 
-        $I->haveInRepository(Game::class, [
-            'team_1' => $teams[0],
-            'team_1_score' => 0,
-            'team_2' => $teams[1],
-            'team_2_score' => 0,
-            'game_type' => GameType::HALF
-        ]);
+        $this->gameScores = new GameScores();
+        $this->gameScores[$teams[0]] = 10;
+        $this->gameScores[$teams[1]] = 5;
+        $this->gameScores[$teams[2]] = 4;
+        $this->gameScores[$teams[3]] = 2;
 
-        $I->haveInRepository(Game::class, [
-            'team_1' => $teams[2],
-            'team_1_score' => 0,
-            'team_2' => $teams[3],
-            'team_2_score' => 0,
-            'game_type' => GameType::HALF
-        ]);
-
-        /**
-         * @var GameResultProcessorFactory $processorFactory
-         */
-        $processorFactory = $I->grabService(GameResultProcessorFactory::class);
         /**
          * @var GameCreatorFactory $creator
          */
         $creatorFactory = $I->grabService(GameCreatorFactory::class);
 
-        $processor = $processorFactory->create(GameType::HALF);
+        $processor = Stub::make(HalfGameResultProcessor::class, ['gameScores' => $this->gameScores, 'observers' => new \SplObjectStorage()], $this);
         $processor->attach($creatorFactory->create(GameType::HALF));
-        $processor->process();
+        $processor->notify();
     }
 
     public function finalGamesCountTest(GamesTester $I)
@@ -68,36 +57,18 @@ class PlayOffCest
 
     public function finalGameCreatedFromWinnersTest(GamesTester $I)
     {
-        $games = $I->grabEntitiesFromRepository(Game::class, [
-            'game_type' => GameType::HALF
-        ]);
-
-        $winners = [];
-        foreach ($games as $game) {
-            $winners[] = $game->getWinner();
-        }
-
         $I->canSeeInRepository(Game::class, [
-            'team_1' => $winners[0],
-            'team_2' => $winners[1],
+            'team_1' => $this->gameScores[0]->team,
+            'team_2' => $this->gameScores[2]->team,
             'game_type' => GameType::FINAL
         ]);
     }
 
     public function bronzeGameCreatedFromLosersTest(GamesTester $I)
     {
-        $games = $I->grabEntitiesFromRepository(Game::class, [
-            'game_type' => GameType::HALF
-        ]);
-
-        $losers = [];
-        foreach ($games as $game) {
-            $losers[] = $game->getLoser();
-        }
-
         $I->canSeeInRepository(Game::class, [
-            'team_1' => $losers[0],
-            'team_2' => $losers[1],
+            'team_1' => $this->gameScores[1]->team,
+            'team_2' => $this->gameScores[3]->team,
             'game_type' => GameType::BRONZE
         ]);
     }
