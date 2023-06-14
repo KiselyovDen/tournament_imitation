@@ -26,7 +26,7 @@ class DivisionCest
          */
         $creator = $I->grabService(GameResultProcessorFactory::class);
 
-        $processor = $creator->createProcessor(GameType::DIVISION);
+        $processor = $creator->create(GameType::DIVISION);
         $processor->process();
     }
 

@@ -3,10 +3,10 @@
 
 namespace App\Tests\Games;
 
-use App\Entity\DivisionGameScore;
 use App\Entity\Game;
 use App\Entity\Team;
 use App\Enum\GameType;
+use App\GameCreator\GameCreatorFactory;
 use App\GameResultProcessor\GameResultProcessorFactory;
 use App\Model\DivisionTableModel;
 use App\Tests\Support\GamesTester;
@@ -40,11 +40,16 @@ class PlayOffCest
         ]);
 
         /**
-         * @var GameResultProcessorFactory $creator
+         * @var GameResultProcessorFactory $processorFactory
          */
-        $creator = $I->grabService(GameResultProcessorFactory::class);
+        $processorFactory = $I->grabService(GameResultProcessorFactory::class);
+        /**
+         * @var GameCreatorFactory $creator
+         */
+        $creatorFactory = $I->grabService(GameCreatorFactory::class);
 
-        $processor = $creator->createProcessor(GameType::HALF);
+        $processor = $processorFactory->create(GameType::HALF);
+        $processor->attach($creatorFactory->create(GameType::HALF));
         $processor->process();
     }
 
