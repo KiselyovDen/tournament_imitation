@@ -22,7 +22,7 @@ readonly class GameResultProcessorFactory
     /**
      * @throws Exception
      */
-    public function createProcessor(GameType $gameType): AbstractGameResultProcessor
+    public function create(GameType $gameType): AbstractGameResultProcessor
     {
         $modelClass = match ($gameType) {
             GameType::DIVISION => DivisionGameResultProcessor::class,

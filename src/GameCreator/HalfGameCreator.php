@@ -4,15 +4,15 @@ namespace App\GameCreator;
 
 use App\Entity\Game;
 use App\Enum\GameType;
-use App\GameScores\GameScores;
+use App\GameResultProcessor\AbstractGameResultProcessor;
 
 class HalfGameCreator extends AbstractGameCreator
 {
-    public function create(GameScores|array $divisionScores): void
+    public function update(AbstractGameResultProcessor|\SplSubject $subject): void
     {
-        // generating half step stub
         $this->gameRepository->removeGamesByType([GameType::HALF, GameType::FINAL, GameType::BRONZE]);
 
+        $divisionScores = $subject->getGameScores();
         for ($i = 0; $i < 2; $i++) {
             $team1 = $divisionScores[$i];
             $team2 = $divisionScores[3 - $i];

@@ -2,12 +2,11 @@
 
 namespace App\GameResultProcessor;
 
-use App\GameScores\GameScores;
 use App\Entity\DivisionGameScore;
 use App\Entity\Game;
 use App\Enum\Division;
 use App\Enum\GameType;
-use App\GameCreator\QuarterGameCreator;
+use App\GameScores\GameScoreElement;
 
 class DivisionGameResultProcessor extends AbstractGameResultProcessor
 {
@@ -15,11 +14,7 @@ class DivisionGameResultProcessor extends AbstractGameResultProcessor
     {
         $this->gameRepository->purge();
 
-        $totalScores = [];
-        $divisions = Division::cases();
-        foreach ($divisions as $division) {
-            $totalScores[$division->value] = new GameScores();
-
+        foreach (Division::cases() as $division) {
             $teams = $this->teamRepository->findBy(['division' => $division]);
 
             $teamsCount = count($teams);
@@ -32,41 +27,45 @@ class DivisionGameResultProcessor extends AbstractGameResultProcessor
 
                     $this->gameRepository->save($game);
 
-                    $totalScores[$division->value][$team1] = $game->getTeam1Score();
-                    $totalScores[$division->value][$team2] = $game->getTeam2Score();
+                    $this->gameScores[$team1] = $game->getTeam1Score();
+                    $this->gameScores[$team2] = $game->getTeam2Score();
                 }
             }
-
-            $totalScores[$division->value]->sort();
         }
+
+        $this->gameScores->sort();
 
         $this->gameRepository->flush();
 
         // save division scores to separate table
-        $this->saveDivisionGameScores($totalScores);
+        $this->saveDivisionGameScores();
 
-        // creating quarter games
-        $quarterGameCreator = new QuarterGameCreator($this->gameRepository);
-        $quarterGameCreator->create($totalScores);
+        $this->notify();
     }
 
-    private function saveDivisionGameScores(array $divisionScores): void
+    private function saveDivisionGameScores(): void
     {
         $this->divisionGameScoreRepository->purge();
 
-        foreach ($divisionScores as $scores) {
-            foreach ($scores as $i => $totalScore) {
-                $divisionGameScore = new DivisionGameScore();
-                $divisionGameScore
-                    ->setTeam($totalScore->team)
-                    ->setScore($totalScore->getScore())
-                    ->setBest($i <= 3);
+        $topCounter = [];
+        foreach (Division::cases() as $division) {
+            $topCounter[$division->value] = 0;
+        }
 
-                $this->divisionGameScoreRepository->save($divisionGameScore);
-            }
+        /**
+         * @var GameScoreElement $score
+         */
+        foreach ($this->gameScores as $score) {
+            $best = $topCounter[$score->team->getDivision()->value]++ <= 3;
+            $divisionGameScore = new DivisionGameScore();
+            $divisionGameScore
+                ->setTeam($score->team)
+                ->setScore($score->getScore())
+                ->setBest($best);
+
+            $this->divisionGameScoreRepository->save($divisionGameScore);
         }
 
         $this->divisionGameScoreRepository->flush();
     }
-
 }

@@ -4,21 +4,22 @@ namespace App\GameCreator;
 
 use App\Entity\Game;
 use App\Enum\GameType;
-use App\GameScores\GameScores;
+use App\GameResultProcessor\AbstractGameResultProcessor;
 
 class FinalGameCreator extends AbstractGameCreator
 {
-    public function create(GameScores|array $divisionScores): void
+    public function update(AbstractGameResultProcessor|\SplSubject $subject): void
     {
         $this->gameRepository->removeGamesByType([GameType::FINAL, GameType::BRONZE]);
 
-        $winners = $divisionScores[GameType::FINAL->value];
-        $losers = $divisionScores[GameType::BRONZE->value];
+        $divisionScores = $subject->getGameScores();
 
-        $game = Game::createGameForTeams($winners[0], $winners[1], GameType::FINAL);
+        // Final game, two winners
+        $game = Game::createGameForTeams($divisionScores[0]->team, $divisionScores[2]->team, GameType::FINAL);
         $this->gameRepository->save($game);
 
-        $game = Game::createGameForTeams($losers[0], $losers[1], GameType::BRONZE);
+        // Bronze, two losers
+        $game = Game::createGameForTeams($divisionScores[1]->team, $divisionScores[3]->team, GameType::BRONZE);
         $this->gameRepository->save($game);
 
         $this->gameRepository->flush();

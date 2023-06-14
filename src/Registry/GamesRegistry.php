@@ -2,7 +2,6 @@
 
 namespace App\Registry;
 
-use App\GameScores\GameScoreElement;
 use App\Entity\Game;
 use App\Enum\GameType;
 

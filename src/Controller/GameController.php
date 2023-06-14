@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Enum\GameType;
+use App\GameCreator\GameCreatorFactory;
 use App\GameResultProcessor\GameResultProcessorFactory;
 use App\Model\DivisionTableModel;
 use App\Registry\GamesRegistry;
@@ -59,7 +60,7 @@ class GameController extends AbstractController
     }
 
     #[Route('/generate-results/{step}', name: 'generate-results')]
-    public function generateResults(string $step, GameResultProcessorFactory $gameProcessorCreator): Response
+    public function generateResults(string $step, GameResultProcessorFactory $gameResultProcessorFactory, GameCreatorFactory $gameCreatorFactory): Response
     {
         $type = GameType::tryFrom(strtoupper($step));
         if (!$type) {
@@ -67,7 +68,10 @@ class GameController extends AbstractController
         }
 
         try {
-            $processor = $gameProcessorCreator->createProcessor($type);
+            $processor = $gameResultProcessorFactory->create($type);
+            if ($type !== GameType::BRONZE) {
+                $processor->attach($gameCreatorFactory->create($type));
+            }
             $processor->process();
         } catch (Exception) {
         } finally {
